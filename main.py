@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import font
 import telebot
 
+
 class SpeechRecognizer:
     def __init__(self):
         self.recognizer = sr.Recognizer()
@@ -57,8 +58,17 @@ class TranslatorService:
         return translation
 
 
+class TelegramSender:
+    def __init__(self, bot_token, chat_id):
+        self.bot = telebot.TeleBot(bot_token)
+        self.chat_id = chat_id
+
+    def send_message(self, message):
+        self.bot.send_message(self.chat_id, message)
+
+
 class PopupWindow:
-    def __init__(self, transcription, hiragana, translation, telegram_bot=None):
+    def __init__(self, transcription, hiragana, translation):
         self.root = tk.Tk()
         self.root.title("Speech Recognition Results")
 
@@ -86,22 +96,13 @@ class PopupWindow:
 
         self.root.mainloop()
 
-        # Send to Telegram
-        if telegram_bot:
-            self.send_to_telegram(telegram_bot, transcription, hiragana, translation)
-
-    def send_to_telegram(self, bot, transcription, hiragana, translation):
-        chat_id = '823900182'  # Replace with your Telegram chat ID
-        message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}"
-        bot.send_message(chat_id, message)
-
 
 class SpeechRecognitionApp:
-    def __init__(self):
+    def __init__(self, bot_token, chat_id):
         self.speech_recognizer = SpeechRecognizer()
         self.text_converter = TextConverter()
         self.translator_service = TranslatorService()
-        self.telegram_bot = telebot.TeleBot('7383089089:AAH81-9AOZRKFIBRkEkMNgYg31gvf4Cs83U')  # Replace with your Telegram bot token
+        self.telegram_sender = TelegramSender(bot_token, chat_id)
 
     def run(self):
         print("Press F10 to start listening for Japanese input...")
@@ -115,11 +116,18 @@ class SpeechRecognitionApp:
             hiragana = self.text_converter.convert_to_hiragana(transcription)
             translation = self.translator_service.translate_text(transcription)
 
-            PopupWindow(transcription, hiragana, translation, self.telegram_bot)
+            PopupWindow(transcription, hiragana, translation)
+            self.send_to_telegram(transcription, hiragana, translation)
         else:
             print("I didn't catch that. Error: {}".format(response["error"]))
 
+    def send_to_telegram(self, transcription, hiragana, translation):
+        message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}"
+        self.telegram_sender.send_message(message)
+
 
 if __name__ == "__main__":
-    app = SpeechRecognitionApp()
+    bot_token = '7383089089:AAH81-9AOZRKFIBRkEkMNgYg31gvf4Cs83U'  # Replace with your Telegram bot token
+    chat_id = '823900182'  # Replace with your Telegram chat ID
+    app = SpeechRecognitionApp(bot_token, chat_id)
     app.run()

@@ -5,8 +5,7 @@ import jaconv
 import keyboard
 import tkinter as tk
 from tkinter import font
-import winsound
-
+import telebot
 
 class SpeechRecognizer:
     def __init__(self):
@@ -18,7 +17,6 @@ class SpeechRecognizer:
 
         with self.microphone as source:
             self.recognizer.adjust_for_ambient_noise(source)
-            winsound.Beep(1000, 300)  # Beep when starting to listen
             print("Listening for your input...")
             audio = self.recognizer.listen(source)
 
@@ -60,7 +58,7 @@ class TranslatorService:
 
 
 class PopupWindow:
-    def __init__(self, transcription, hiragana, translation):
+    def __init__(self, transcription, hiragana, translation, telegram_bot=None):
         self.root = tk.Tk()
         self.root.title("Speech Recognition Results")
 
@@ -88,12 +86,22 @@ class PopupWindow:
 
         self.root.mainloop()
 
+        # Send to Telegram
+        if telegram_bot:
+            self.send_to_telegram(telegram_bot, transcription, hiragana, translation)
+
+    def send_to_telegram(self, bot, transcription, hiragana, translation):
+        chat_id = '823900182'  # Replace with your Telegram chat ID
+        message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}"
+        bot.send_message(chat_id, message)
+
 
 class SpeechRecognitionApp:
     def __init__(self):
         self.speech_recognizer = SpeechRecognizer()
         self.text_converter = TextConverter()
         self.translator_service = TranslatorService()
+        self.telegram_bot = telebot.TeleBot('7383089089:AAH81-9AOZRKFIBRkEkMNgYg31gvf4Cs83U')  # Replace with your Telegram bot token
 
     def run(self):
         print("Press F10 to start listening for Japanese input...")
@@ -107,7 +115,7 @@ class SpeechRecognitionApp:
             hiragana = self.text_converter.convert_to_hiragana(transcription)
             translation = self.translator_service.translate_text(transcription)
 
-            PopupWindow(transcription, hiragana, translation)
+            PopupWindow(transcription, hiragana, translation, self.telegram_bot)
         else:
             print("I didn't catch that. Error: {}".format(response["error"]))
 

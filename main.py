@@ -2,6 +2,7 @@ import speech_recognition as sr
 from googletrans import Translator
 from janome.tokenizer import Tokenizer
 import jaconv
+import keyboard
 
 
 def recognize_speech_from_mic(recognizer, microphone):
@@ -50,6 +51,8 @@ def main():
     microphone = sr.Microphone()
     translator = Translator()
 
+    print("Press F10 to start listening for Japanese input...")
+    keyboard.wait('F10')
     print("Say something in Japanese!")
     response = recognize_speech_from_mic(recognizer, microphone)
 

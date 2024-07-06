@@ -118,7 +118,7 @@ class SpeechRecognitionApp:
             hiragana = self.text_converter.convert_to_hiragana(transcription)
             translation = self.translator_service.translate_text(transcription)
 
-            PopupWindow(transcription, hiragana, translation)
+            # PopupWindow(transcription, hiragana, translation)
             self.send_to_telegram(transcription, hiragana, translation)
         else:
             print("I didn't catch that. Error: {}".format(response["error"]))

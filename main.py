@@ -3,6 +3,7 @@ from googletrans import Translator
 from janome.tokenizer import Tokenizer
 import jaconv
 import keyboard
+import tkinter as tk  # Import tkinter for GUI
 import winsound  # For Windows beep
 
 
@@ -48,6 +49,23 @@ def convert_to_hiragana(text):
     return hiragana_text
 
 
+def show_popup(transcription, hiragana, translation):
+    root = tk.Tk()
+    root.title("Speech Recognition Results")
+    root.attributes('-topmost', True)  # Make the window appear on top of all others
+
+    label1 = tk.Label(root, text=f"You said: {transcription}")
+    label1.pack()
+
+    label2 = tk.Label(root, text=f"In Hiragana: {hiragana}")
+    label2.pack()
+
+    label3 = tk.Label(root, text=f"Translation: {translation}")
+    label3.pack()
+
+    root.mainloop()
+
+
 def main():
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
@@ -63,9 +81,7 @@ def main():
         hiragana = convert_to_hiragana(transcription)
         translation = translator.translate(transcription, src='ja', dest='en').text
 
-        print("You said: {}".format(transcription))
-        print("In Hiragana: {}".format(hiragana))
-        print("Translation: {}".format(translation))
+        show_popup(transcription, hiragana, translation)
     else:
         print("I didn't catch that. Error: {}".format(response["error"]))
 

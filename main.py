@@ -6,6 +6,7 @@ import keyboard
 import tkinter as tk
 from tkinter import font
 import telebot
+import winsound
 
 
 class SpeechRecognizer:
@@ -18,6 +19,7 @@ class SpeechRecognizer:
 
         with self.microphone as source:
             self.recognizer.adjust_for_ambient_noise(source)
+            winsound.Beep(1000, 300)
             print("Listening for your input...")
             audio = self.recognizer.listen(source)
 

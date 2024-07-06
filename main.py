@@ -3,8 +3,9 @@ from googletrans import Translator
 from janome.tokenizer import Tokenizer
 import jaconv
 import keyboard
-import tkinter as tk  # Import tkinter for GUI
-import winsound  # For Windows beep
+import tkinter as tk
+from tkinter import font
+import winsound
 
 
 def recognize_speech_from_mic(recognizer, microphone):
@@ -52,15 +53,33 @@ def convert_to_hiragana(text):
 def show_popup(transcription, hiragana, translation):
     root = tk.Tk()
     root.title("Speech Recognition Results")
-    root.attributes('-topmost', True)  # Make the window appear on top of all others
 
-    label1 = tk.Label(root, text=f"You said: {transcription}")
+    # Get screen width and height
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Calculate the position for the popup to be centered
+    popup_width = 400
+    popup_height = 200
+    x_position = (screen_width - popup_width) // 2
+    y_position = (screen_height - popup_height) // 2
+
+    # Set the popup window size and position
+    root.geometry(f"{popup_width}x{popup_height}+{x_position}+{y_position}")
+
+    # Make the window appear on top of all others
+    root.attributes('-topmost', True)
+
+    # Create a bold and bigger font
+    bold_font = font.Font(weight='bold', size=18)
+
+    label1 = tk.Label(root, text=f"You said: {transcription}", font=bold_font)
     label1.pack()
 
-    label2 = tk.Label(root, text=f"In Hiragana: {hiragana}")
+    label2 = tk.Label(root, text=f"In Hiragana: {hiragana}", font=bold_font)
     label2.pack()
 
-    label3 = tk.Label(root, text=f"Translation: {translation}")
+    label3 = tk.Label(root, text=f"Translation: {translation}", font=bold_font)
     label3.pack()
 
     root.mainloop()

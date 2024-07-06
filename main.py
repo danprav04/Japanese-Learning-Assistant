@@ -3,6 +3,7 @@ from googletrans import Translator
 from janome.tokenizer import Tokenizer
 import jaconv
 import keyboard
+import winsound  # For Windows beep
 
 
 def recognize_speech_from_mic(recognizer, microphone):
@@ -17,6 +18,7 @@ def recognize_speech_from_mic(recognizer, microphone):
     # Adjust the recognizer sensitivity to ambient noise and record audio from the microphone
     with microphone as source:
         recognizer.adjust_for_ambient_noise(source)
+        winsound.Beep(1000, 300)  # Beep when starting to listen
         print("Listening for your input...")
         audio = recognizer.listen(source)
 

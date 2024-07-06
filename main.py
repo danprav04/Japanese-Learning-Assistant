@@ -1,6 +1,7 @@
 import speech_recognition as sr
-import jaconv
 from googletrans import Translator
+from janome.tokenizer import Tokenizer
+import jaconv
 
 
 def recognize_speech_from_mic(recognizer, microphone):
@@ -36,6 +37,14 @@ def recognize_speech_from_mic(recognizer, microphone):
     return response
 
 
+def convert_to_hiragana(text):
+    tokenizer = Tokenizer()
+    tokens = tokenizer.tokenize(text)
+    katakana_text = ''.join(token.reading for token in tokens if token.reading)
+    hiragana_text = jaconv.kata2hira(katakana_text)
+    return hiragana_text
+
+
 def main():
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
@@ -46,7 +55,7 @@ def main():
 
     if response["success"]:
         transcription = response["transcription"]
-        hiragana = jaconv.kata2hira(jaconv.kata2hira(jaconv.hira2kata(transcription)))
+        hiragana = convert_to_hiragana(transcription)
         translation = translator.translate(transcription, src='ja', dest='en').text
 
         print("You said: {}".format(transcription))

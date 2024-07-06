@@ -130,4 +130,6 @@ if __name__ == "__main__":
     bot_token = '7383089089:AAH81-9AOZRKFIBRkEkMNgYg31gvf4Cs83U'  # Replace with your Telegram bot token
     chat_id = '823900182'  # Replace with your Telegram chat ID
     app = SpeechRecognitionApp(bot_token, chat_id)
-    app.run()
+
+    while True:
+        app.run()

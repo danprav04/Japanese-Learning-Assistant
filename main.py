@@ -3,8 +3,6 @@ from googletrans import Translator
 from janome.tokenizer import Tokenizer
 import jaconv
 import keyboard
-import tkinter as tk
-from tkinter import font
 import telebot
 import winsound
 
@@ -66,37 +64,7 @@ class TelegramSender:
         self.chat_id = chat_id
 
     def send_message(self, message):
-        self.bot.send_message(self.chat_id, message)
-
-
-class PopupWindow:
-    def __init__(self, transcription, hiragana, translation):
-        self.root = tk.Tk()
-        self.root.title("Speech Recognition Results")
-
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-
-        popup_width = 400
-        popup_height = 200
-        x_position = (screen_width - popup_width) // 2
-        y_position = (screen_height - popup_height) // 2
-
-        self.root.geometry(f"{popup_width}x{popup_height}+{x_position}+{y_position}")
-        self.root.attributes('-topmost', True)
-
-        self.bold_font = font.Font(weight='bold', size=18)
-
-        self.label1 = tk.Label(self.root, text=f"You said: {transcription}", font=self.bold_font)
-        self.label1.pack()
-
-        self.label2 = tk.Label(self.root, text=f"In Hiragana: {hiragana}", font=self.bold_font)
-        self.label2.pack()
-
-        self.label3 = tk.Label(self.root, text=f"Translation: {translation}", font=self.bold_font)
-        self.label3.pack()
-
-        self.root.mainloop()
+        self.bot.send_message(self.chat_id, message, parse_mode='Markdown')
 
 
 class SpeechRecognitionApp:
@@ -118,13 +86,13 @@ class SpeechRecognitionApp:
             hiragana = self.text_converter.convert_to_hiragana(transcription)
             translation = self.translator_service.translate_text(transcription)
 
-            # PopupWindow(transcription, hiragana, translation)
             self.send_to_telegram(transcription, hiragana, translation)
         else:
             print("I didn't catch that. Error: {}".format(response["error"]))
 
     def send_to_telegram(self, transcription, hiragana, translation):
-        message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}"
+        link = f"[Detailed Parsing](https://ichi.moe/cl/qr/?q={transcription}&r=htr)"
+        message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}\n{link}"
         self.telegram_sender.send_message(message)
 
 

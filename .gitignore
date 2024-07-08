@@ -3,3 +3,5 @@ build
 venv
 .idea
 build/main
+*.wav
+*.ogg

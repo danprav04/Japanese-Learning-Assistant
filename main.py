@@ -29,6 +29,9 @@ class SpeechRecognizer:
             response["error"] = "API unavailable"
         except sr.UnknownValueError:
             response["error"] = "Unable to recognize speech"
+        except Exception as e:
+            response["success"] = False
+            response["error"] = str(e)
 
         return response
 
@@ -85,31 +88,42 @@ class SpeechRecognitionApp:
 
         @self.bot.message_handler(content_types=['voice'])
         def handle_voice(message):
-            file_id = message.voice.file_id
-            chat_id = message.chat.id
-            message_id = message.message_id
+            try:
+                file_id = message.voice.file_id
+                chat_id = message.chat.id
+                message_id = message.message_id
 
-            self.telegram_handler.download_audio(file_id, self.audio_save_path)
-            self.telegram_handler.convert_audio_to_wav(self.audio_save_path, self.audio_wav_path)
-            response = self.speech_recognizer.recognize_speech_from_audio(self.audio_wav_path)
+                self.telegram_handler.download_audio(file_id, self.audio_save_path)
+                self.telegram_handler.convert_audio_to_wav(self.audio_save_path, self.audio_wav_path)
+                response = self.speech_recognizer.recognize_speech_from_audio(self.audio_wav_path)
 
-            if response["success"]:
-                transcription = response["transcription"]
-                hiragana = self.text_converter.convert_to_hiragana(transcription)
-                translation = self.translator_service.translate_text(transcription)
+                if response["success"]:
+                    transcription = response["transcription"]
+                    hiragana = self.text_converter.convert_to_hiragana(transcription)
+                    translation = self.translator_service.translate_text(transcription)
 
-                self.send_to_telegram(chat_id, message_id, transcription, hiragana, translation)
-            else:
-                self.telegram_handler.send_message(chat_id, f"Error: {response['error']}",
-                                                   reply_to_message_id=message_id)
+                    self.send_to_telegram(chat_id, message_id, transcription, hiragana, translation)
+                else:
+                    self.telegram_handler.send_message(chat_id, f"Error: {response['error']}",
+                                                       reply_to_message_id=message_id)
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
     def send_to_telegram(self, chat_id, message_id, transcription, hiragana, translation):
-        link = f"[Detailed Parsing](https://ichi.moe/cl/qr/?q={transcription}&r=htr)"
-        message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}\n{link}"
-        self.telegram_handler.send_message(chat_id, message, reply_to_message_id=message_id)
+        try:
+            link = f"[Detailed Parsing](https://ichi.moe/cl/qr/?q={transcription}&r=htr)"
+            message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}\n{link}"
+            self.telegram_handler.send_message(chat_id, message, reply_to_message_id=message_id)
+        except Exception as e:
+            print(f"An error occurred while sending message to Telegram: {e}")
 
     def run(self):
-        self.bot.polling()
+        while True:
+            try:
+                self.bot.polling(none_stop=True)
+            except Exception as e:
+                print(f"An error occurred during polling: {e}")
+                self.bot.stop_polling()
 
 
 if __name__ == "__main__":

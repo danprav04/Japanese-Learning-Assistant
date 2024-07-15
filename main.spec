@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('C:\\Python312\\Lib\\site-packages\\janome', 'janome')],
+    datas=[('C:\\Users\\Moshe\\Documents\\GitHub\\Japanese-Learning-Assistant\\venv\\Lib\\site-packages\\janome', 'janome')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

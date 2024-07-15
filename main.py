@@ -1,10 +1,10 @@
+import io
 import speech_recognition as sr
 from googletrans import Translator
 from janome.tokenizer import Tokenizer
 import jaconv
 import telebot
 import requests
-import os
 import soundfile as sf
 
 
@@ -12,8 +12,8 @@ class SpeechRecognizer:
     def __init__(self):
         self.recognizer = sr.Recognizer()
 
-    def recognize_speech_from_audio(self, audio_path):
-        """Transcribe speech from audio file."""
+    def recognize_speech_from_audio(self, audio_data):
+        """Transcribe speech from audio data."""
         response = {
             "success": True,
             "error": None,
@@ -21,7 +21,8 @@ class SpeechRecognizer:
         }
 
         try:
-            with sr.AudioFile(audio_path) as source:
+            audio_file = sr.AudioFile(audio_data)
+            with audio_file as source:
                 audio = self.recognizer.record(source)
                 response["transcription"] = self.recognizer.recognize_google(audio, language="ja-JP")
         except sr.RequestError:
@@ -63,17 +64,18 @@ class TelegramHandler:
     def send_message(self, chat_id, message, reply_to_message_id=None):
         self.bot.send_message(chat_id, message, parse_mode='Markdown', reply_to_message_id=reply_to_message_id)
 
-    def download_audio(self, file_id, save_path):
+    def download_audio(self, file_id):
         file_info = self.bot.get_file(file_id)
         file_url = f"https://api.telegram.org/file/bot{self.bot.token}/{file_info.file_path}"
         response = requests.get(file_url)
+        return io.BytesIO(response.content)
 
-        with open(save_path, 'wb') as audio_file:
-            audio_file.write(response.content)
-
-    def convert_audio_to_wav(self, ogg_path, wav_path):
-        data, samplerate = sf.read(ogg_path)
-        sf.write(wav_path, data, samplerate)
+    def convert_audio_to_wav(self, ogg_data):
+        data, samplerate = sf.read(ogg_data)
+        wav_io = io.BytesIO()
+        sf.write(wav_io, data, samplerate, format='WAV')
+        wav_io.seek(0)  # Seek to the start of the BytesIO object
+        return wav_io
 
 
 class SpeechRecognitionApp:
@@ -83,8 +85,6 @@ class SpeechRecognitionApp:
         self.translator_service = TranslatorService()
         self.telegram_handler = TelegramHandler(bot_token)
         self.bot = telebot.TeleBot(bot_token)
-        self.audio_save_path = "audio.ogg"  # Path to save the downloaded audio file
-        self.audio_wav_path = "audio.wav"  # Path to save the converted audio file
 
         @self.bot.message_handler(content_types=['voice'])
         def handle_voice(message):
@@ -93,9 +93,9 @@ class SpeechRecognitionApp:
                 chat_id = message.chat.id
                 message_id = message.message_id
 
-                self.telegram_handler.download_audio(file_id, self.audio_save_path)
-                self.telegram_handler.convert_audio_to_wav(self.audio_save_path, self.audio_wav_path)
-                response = self.speech_recognizer.recognize_speech_from_audio(self.audio_wav_path)
+                ogg_data = self.telegram_handler.download_audio(file_id)
+                wav_data = self.telegram_handler.convert_audio_to_wav(ogg_data)
+                response = self.speech_recognizer.recognize_speech_from_audio(wav_data)
 
                 if response["success"]:
                     transcription = response["transcription"]
@@ -104,8 +104,7 @@ class SpeechRecognitionApp:
 
                     self.send_to_telegram(chat_id, message_id, transcription, hiragana, translation)
                 else:
-                    self.telegram_handler.send_message(chat_id, f"Error: {response['error']}",
-                                                       reply_to_message_id=message_id)
+                    self.telegram_handler.send_message(chat_id, f"Error: {response['error']}", reply_to_message_id=message_id)
             except Exception as e:
                 print(f"An error occurred: {e}")
 
@@ -127,6 +126,6 @@ class SpeechRecognitionApp:
 
 
 if __name__ == "__main__":
-    bot_token = '7499255814:AAH23BW4Bs-l2exd8jv6WODFM1hS1nFlyo8'  # Replace with your Telegram bot token
+    bot_token = '7499255814:AAH23BW4Bs-l2exd8jv6WODFM1hS1nFlyo8'
     app = SpeechRecognitionApp(bot_token)
     app.run()

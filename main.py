@@ -104,8 +104,10 @@ class SpeechRecognitionApp:
 
                     self.send_to_telegram(chat_id, message_id, transcription, hiragana, translation)
                 else:
-                    self.telegram_handler.send_message(chat_id, f"Error: {response['error']}", reply_to_message_id=message_id)
+                    error_message = response["error"] if response["error"] == "Unable to recognize speech" else "Some error occurred, try again later."
+                    self.telegram_handler.send_message(chat_id, f"Error: {error_message}", reply_to_message_id=message_id)
             except Exception as e:
+                self.telegram_handler.send_message(chat_id, "Some error occurred, try again later.", reply_to_message_id=message.message_id)
                 print(f"An error occurred: {e}")
 
     def send_to_telegram(self, chat_id, message_id, transcription, hiragana, translation):
@@ -114,6 +116,7 @@ class SpeechRecognitionApp:
             message = f"You said: {transcription}\nIn Hiragana: {hiragana}\nTranslation: {translation}\n{link}"
             self.telegram_handler.send_message(chat_id, message, reply_to_message_id=message_id)
         except Exception as e:
+            self.telegram_handler.send_message(chat_id, "Some error occurred while sending the message.", reply_to_message_id=message_id)
             print(f"An error occurred while sending message to Telegram: {e}")
 
     def run(self):
